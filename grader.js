@@ -24,8 +24,11 @@ References:
 var fs = require('fs');
 var program = require('commander');
 var cheerio = require('cheerio');
+var restler = require('restler');
+
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
+var URL_DEFAULT = "http://http://still-sierra-2921.herokuapp.com";
 
 var assertFileExists = function(infile) {
     var instr = infile.toString();
@@ -61,13 +64,27 @@ var clone = function(fn) {
     return fn.bind({});
 };
 
+var getUrlContent = function(url, checksfile) {
+    rest.get(url).on('success', function(data, response) {
+        var checkJson = checkHtmlFile(data, checksfile);
+        var outJson = JSON.stringify(checkJson, null, 4);
+    });
+}
+
 if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-u, --url <html_url>', 'Path to URL', URL_DEFAULT)
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
-    var outJson = JSON.stringify(checkJson, null, 4);
+
+    if (process.url) {
+        getUrlContent(process.url, program.checks);
+    }
+    else {
+        var checkJson = checkHtmlFile(program.file, program.checks);
+        var outJson = JSON.stringify(checkJson, null, 4);
+    }
     console.log(outJson);
 } else {
     exports.checkHtmlFile = checkHtmlFile;
